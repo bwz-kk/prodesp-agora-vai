@@ -116,6 +116,8 @@ function elHtml(tag, cls, html) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
   if (html != null) n.innerHTML = html;
+  return n;
+}
 // ---------- Navegação / views ----------
 const VIEWS = ["dashboard", "editais", "cadastro", "edital", "juridico", "tecnico", "gestor", "admin", "auditoria", "comunicacao", "licitacao"];
 
@@ -409,8 +411,6 @@ function donutChart(porStatus) {
 
 
 
-  return n;
-}
 function fmtData(d) { return d ? new Date(d).toLocaleDateString("pt-BR") : "—"; }
 function fmtMoeda(v) {
   if (v == null || v === "" || Number.isNaN(Number(v))) return "—";
@@ -508,7 +508,6 @@ async function loadDashboard() {
   row.appendChild(chartCard);
   v.appendChild(row);
 
-function initials(nome) {
   const lower = el("div", "grid grid-3");
   lower.style.marginTop = "1rem";
 
@@ -566,6 +565,12 @@ function initials(nome) {
   lower.appendChild(pendCard);
   v.appendChild(lower);
 }
+
+function initials(nome) {
+  const p = (nome || "?").trim().split(/\s+/);
+  return ((p[0]?.[0] || "") + (p[1]?.[0] || "")).toUpperCase() || "?";
+}
+
 // ---------- Gestão de Editais ----------
 let editaisTab = "visualizar";
 let editaisCache = [];
@@ -882,7 +887,6 @@ async function abrirEdital(id) {
   }
 }
 
-}
 function acoesEdital(e) {
   const box = el("div", "card");
   box.appendChild(el("h3", "", "Ações"));
