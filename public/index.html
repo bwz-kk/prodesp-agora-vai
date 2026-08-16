@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRODESP — Automatização de Editais</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ TELA DE LOGIN ============ -->
+  <section id="view-login" class="view">
+    <div class="login-card">
+      <h1>PRODESP</h1>
+      <p class="subtitle">Automatização de Editais</p>
+      <form id="login-form" autocomplete="off">
+        <label for="login-email">E-mail</label>
+        <input type="email" id="login-email" placeholder="usuario@prodesp.gov.br" required />
+
+        <label for="login-senha">Senha</label>
+        <input type="password" id="login-senha" placeholder="••••••••" required />
+
+        <div class="login-options">
+          <label class="checkbox"><input type="checkbox" id="login-keep" /> Manter conectado</label>
+          <a href="#" id="login-forgot" class="link">Esqueci minha senha</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+        <p id="login-error" class="error" hidden></p>
+      </form>
+      <button type="button" id="login-google" class="btn btn-outline btn-block">Entrar com Google</button>
+      <p class="hint">Demo: admin@prodesp.gov.br · juridico@prodesp.gov.br · tecnico@prodesp.gov.br · gestor@prodesp.gov.br · comunicacao@prodesp.gov.br (senha 123456)</p>
+    </div>
+  </section>
+
+  <!-- ============ APP (pós-login) ============ -->
+  <div id="view-app" class="app" hidden>
+    <header class="topbar">
+      <div class="brand">PRODESP <span>Editais</span></div>
+      <nav id="nav" class="nav"></nav>
+      <div class="userbox">
+        <span id="user-name"></span>
+        <span id="user-perfil" class="badge"></span>
+        <button id="btn-logout" class="btn btn-ghost">Sair</button>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- Dashboard -->
+      <section id="view-dashboard" class="view"></section>
+
+      <!-- Lista de Editais -->
+      <section id="view-editais" class="view">
+        <div class="view-head">
+          <h2>Editais</h2>
+          <button id="btn-novo-edital" class="btn btn-primary" hidden>+ Novo Edital</button>
+        </div>
+        <div class="toolbar">
+          <input type="search" id="filtro-busca" placeholder="Buscar por nome, número ou descrição" />
+          <select id="filtro-status"><option value="">Todos os status</option></select>
+          <select id="filtro-responsavel"><option value="">Todos os responsáveis</option></select>
+        </div>
+        <table class="table" id="tabela-editais">
+          <thead>
+            <tr>
+              <th data-sort="nome">Nome</th>
+              <th data-sort="numero">Número</th>
+              <th data-sort="codigo">Código</th>
+              <th data-sort="status">Status</th>
+              <th data-sort="prazoVigencia">Prazo</th>
+              <th data-sort="dataPublicacao">Data de vigência</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-editais-body"></tbody>
+        </table>
+      </section>
+
+      <!-- Cadastro de Edital -->
+      <section id="view-cadastro" class="view">
+        <div class="view-head"><h2>Cadastro de Edital</h2></div>
+        <form id="form-edital" class="form">
+          <label for="ed-nome">Nome do Edital</label>
+          <input type="text" id="ed-nome" required />
+
+          <label for="ed-numero">Número do Edital</label>
+          <input type="text" id="ed-numero" required />
+
+          <label for="ed-descricao">Descrição Detalhada</label>
+          <textarea id="ed-descricao" rows="5"></textarea>
+
+          <label for="ed-data">Data de Publicação</label>
+          <input type="date" id="ed-data" />
+
+          <label for="ed-prazo">Prazo de Vigência</label>
+          <input type="date" id="ed-prazo" />
+
+          <label for="ed-pdf">Upload de PDF</label>
+          <input type="file" id="ed-pdf" accept="application/pdf" />
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="button" id="btn-cancelar-edital" class="btn btn-ghost">Cancelar</button>
+          </div>
+          <p id="ed-error" class="error" hidden></p>
+        </form>
+      </section>
+
+      <!-- Página do Edital (detalhe) -->
+      <section id="view-edital" class="view"></section>
+
+      <!-- Revisão Jurídica -->
+      <section id="view-juridico" class="view"></section>
+
+      <!-- Especialidade Técnica -->
+      <section id="view-tecnico" class="view"></section>
+
+      <!-- Aprovação Final (Gestor) -->
+      <section id="view-gestor" class="view"></section>
+
+      <!-- Painel do Administrador -->
+      <section id="view-admin" class="view"></section>
+
+      <!-- Histórico de Ações -->
+      <section id="view-auditoria" class="view"></section>
+
+      <!-- Comunicação -->
+      <section id="view-comunicacao" class="view"></section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
