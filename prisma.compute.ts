@@ -6,10 +6,10 @@ export default defineComputeConfig({
     region: "us-east-1",
     framework: "custom",
     httpPort: 3000,
-  },
-  build: {
-    command: "npm run build",
-    outputDirectory: "dist",
-    entrypoint: "server.js",
+    build: {
+      command: "npm run build",
+      outputDirectory: "dist",
+      entrypoint: "server.js",
+    },
   },
 });
