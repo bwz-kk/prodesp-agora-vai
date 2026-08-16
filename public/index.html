@@ -3,133 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PRODESP — Automatização de Editais</title>
+  <title>PRODESP — Sistema de Editais</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <!-- ============ TELA DE LOGIN ============ -->
   <section id="view-login" class="view">
-    <div class="login-card">
-      <h1>PRODESP</h1>
-      <p class="subtitle">Automatização de Editais</p>
-      <form id="login-form" autocomplete="off">
-        <label for="login-email">E-mail</label>
-        <input type="email" id="login-email" placeholder="usuario@prodesp.gov.br" required />
+    <div class="gov-header">
+      <div class="gov-brand">
+        <span class="gov-flag"><span></span><span></span><span></span></span>
+        <span>São Paulo Governo do Estado — São Paulo a Todos</span>
+      </div>
+      <span>Portal de Serviços</span>
+    </div>
 
-        <label for="login-senha">Senha</label>
-        <input type="password" id="login-senha" placeholder="••••••••" required />
+    <div class="prodesp-nav">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        PRODESP
+      </div>
+      <div class="links">
+        <a href="#">Início</a><a href="#">Soluções Prodesp</a><a href="#">Portal de APIs</a><a href="#">Cidades</a><a href="#">Clientes</a><a href="#">Parcerias</a><a href="#">Atendimento</a><a href="#">Carta de Serviços</a>
+      </div>
+      <span class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+    </div>
 
-        <div class="login-options">
-          <label class="checkbox"><input type="checkbox" id="login-keep" /> Manter conectado</label>
-          <a href="#" id="login-forgot" class="link">Esqueci minha senha</a>
+    <div class="login-wrap">
+      <div class="login-brand">
+        <div class="brand-user"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></div>
+        <h2>LOGIN</h2>
+        <p>Acesse o Sistema de Editais da PRODESP e gerencie seus processos licitatórios com segurança e transparência.</p>
+      </div>
+
+      <div class="login-panel">
+        <div class="login-card">
+          <div class="login-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></div>
+          <div class="login-title">LOGIN</div>
+
+          <form id="login-form" autocomplete="off">
+            <div class="field">
+              <label for="login-email">E-mail</label>
+              <div class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                <input type="email" id="login-email" placeholder="usuario@prodesp.gov.br" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="login-senha">Senha</label>
+              <div class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                <input type="password" id="login-senha" placeholder="••••••••" required />
+                <svg class="eye" id="login-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+            </div>
+            <a href="#" id="login-forgot" class="login-forgot">Esqueceu sua senha?</a>
+            <button type="submit" class="btn btn-primary btn-block login-btn">LOGIN</button>
+            <p id="login-error" class="error" hidden></p>
+          </form>
+
+          <p class="login-signup">Não tem uma conta? <a href="#">Cadastre-se</a></p>
+
+          <div class="login-divider">DEMONSTRAÇÃO DE PERFIS</div>
+          <div class="demo-profiles" id="demo-profiles"></div>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-        <p id="login-error" class="error" hidden></p>
-      </form>
-      <button type="button" id="login-google" class="btn btn-outline btn-block">Entrar com Google</button>
-      <p class="hint">Demo: admin@prodesp.gov.br · juridico@prodesp.gov.br · tecnico@prodesp.gov.br · gestor@prodesp.gov.br · comunicacao@prodesp.gov.br (senha 123456)</p>
+      </div>
     </div>
   </section>
 
   <!-- ============ APP (pós-login) ============ -->
   <div id="view-app" class="app" hidden>
-    <header class="topbar">
-      <div class="brand">PRODESP <span>Editais</span></div>
-      <nav id="nav" class="nav"></nav>
-      <div class="userbox">
-        <span id="user-name"></span>
-        <span id="user-perfil" class="badge"></span>
-        <button id="btn-logout" class="btn btn-ghost">Sair</button>
+    <aside class="sidebar">
+      <div class="sb-logo">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+          PRODESP
+        </div>
+        <div class="sub">Sistema de Editais</div>
       </div>
-    </header>
+      <div class="sb-user">
+        <div class="av" id="sb-avatar"></div>
+        <div class="info"><b id="sb-name"></b><span id="sb-role"></span></div>
+      </div>
+      <div class="sb-label">MENU PRINCIPAL</div>
+      <nav id="sidebar-nav"></nav>
+      <div class="sb-logout"><a href="#" id="btn-logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg> Sair do Sistema</a></div>
+    </aside>
 
-    <main class="content">
-
-      <!-- Dashboard -->
-      <section id="view-dashboard" class="view"></section>
-
-      <!-- Lista de Editais -->
-      <section id="view-editais" class="view">
-        <div class="view-head">
-          <h2>Editais</h2>
-          <button id="btn-novo-edital" class="btn btn-primary" hidden>+ Novo Edital</button>
+    <div class="main">
+      <header class="topbar">
+        <span class="crumb">Início &gt; <b id="crumb-current">Dashboard</b></span>
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" placeholder="Buscar editais, propostas..." />
         </div>
-        <div class="toolbar">
-          <input type="search" id="filtro-busca" placeholder="Buscar por nome, número ou descrição" />
-          <select id="filtro-status"><option value="">Todos os status</option></select>
-          <select id="filtro-responsavel"><option value="">Todos os responsáveis</option></select>
+        <span class="bell">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="dot"></span>
+        </span>
+        <div class="tuser">
+          <div class="av" id="tb-avatar"></div>
+          <div class="info"><b id="tb-name"></b><span id="tb-role"></span></div>
         </div>
-        <table class="table" id="tabela-editais">
-          <thead>
-            <tr>
-              <th data-sort="nome">Nome</th>
-              <th data-sort="numero">Número</th>
-              <th data-sort="codigo">Código</th>
-              <th data-sort="status">Status</th>
-              <th data-sort="prazoVigencia">Prazo</th>
-              <th data-sort="dataPublicacao">Data de vigência</th>
-            </tr>
-          </thead>
-          <tbody id="tabela-editais-body"></tbody>
-        </table>
-      </section>
+      </header>
 
-      <!-- Cadastro de Edital -->
-      <section id="view-cadastro" class="view">
-        <div class="view-head"><h2>Cadastro de Edital</h2></div>
-        <form id="form-edital" class="form">
-          <label for="ed-nome">Nome do Edital</label>
-          <input type="text" id="ed-nome" required />
+      <div class="switcher">
+        <span class="sw-label">DEMONSTRAÇÃO DE PERFIS — O dashboard se adapta automaticamente ao perfil do usuário.</span>
+        <div class="sw-pills" id="sw-pills"></div>
+      </div>
 
-          <label for="ed-numero">Número do Edital</label>
-          <input type="text" id="ed-numero" required />
-
-          <label for="ed-descricao">Descrição Detalhada</label>
-          <textarea id="ed-descricao" rows="5"></textarea>
-
-          <label for="ed-data">Data de Publicação</label>
-          <input type="date" id="ed-data" />
-
-          <label for="ed-prazo">Prazo de Vigência</label>
-          <input type="date" id="ed-prazo" />
-
-          <label for="ed-pdf">Upload de PDF</label>
-          <input type="file" id="ed-pdf" accept="application/pdf" />
-
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-            <button type="button" id="btn-cancelar-edital" class="btn btn-ghost">Cancelar</button>
-          </div>
-          <p id="ed-error" class="error" hidden></p>
-        </form>
-      </section>
-
-      <!-- Página do Edital (detalhe) -->
-      <section id="view-edital" class="view"></section>
-
-      <!-- Revisão Jurídica -->
-      <section id="view-juridico" class="view"></section>
-
-      <!-- Especialidade Técnica -->
-      <section id="view-tecnico" class="view"></section>
-
-      <!-- Aprovação Final (Gestor) -->
-      <section id="view-gestor" class="view"></section>
-
-      <!-- Painel do Administrador -->
-      <section id="view-admin" class="view"></section>
-
-      <!-- Histórico de Ações -->
-      <section id="view-auditoria" class="view"></section>
-
-      <!-- Comunicação -->
-      <section id="view-comunicacao" class="view"></section>
-
-    </main>
+      <main class="content">
+        <section id="view-dashboard" class="view"></section>
+        <section id="view-editais" class="view"></section>
+        <section id="view-cadastro" class="view"></section>
+        <section id="view-edital" class="view"></section>
+        <section id="view-juridico" class="view"></section>
+        <section id="view-tecnico" class="view"></section>
+        <section id="view-gestor" class="view"></section>
+        <section id="view-admin" class="view"></section>
+        <section id="view-auditoria" class="view"></section>
+        <section id="view-comunicacao" class="view"></section>
+        <section id="view-licitacao" class="view"></section>
+      </main>
+    </div>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
+
