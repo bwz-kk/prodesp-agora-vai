@@ -2,8 +2,9 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { resolvePublicDir } from "../utils/paths";
 
-const UPLOAD_DIR = path.resolve(__dirname, "../../public/uploads");
+const UPLOAD_DIR = path.join(resolvePublicDir(), "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
