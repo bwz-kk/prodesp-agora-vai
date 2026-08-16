@@ -1,7 +1,7 @@
 {
   "name": "prodesp-agora-vai",
   "version": "1.0.0",
-  "description": "Automatização de Editais — PRODESP (Back-End: API REST + Prisma + MySQL)",
+  "description": "Automatização de Editais — PRODESP (Back-End: API REST + Prisma + PostgreSQL)",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",

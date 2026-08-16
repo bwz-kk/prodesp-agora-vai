@@ -25,7 +25,7 @@ O sistema adota uma **arquitetura modular em três camadas**, com separação cl
                         │ Prisma ORM
 ┌───────────────────────▼─────────────────────┐
 │           CAMADA DE DADOS                    │
-│   Banco de Dados — MySQL (via Docker)        │
+│   Banco de Dados — PostgreSQL (via Docker)    │
 │   ORM: Prisma + TypeScript                   │
 └─────────────────────────────────────────────┘
 ```
@@ -43,8 +43,8 @@ O sistema adota uma **arquitetura modular em três camadas**, com separação cl
 | Back-End | Express.js | Framework HTTP (implícito pelo uso de routes/) |
 | ORM | Prisma | Mapeamento objeto-relacional com TypeScript |
 | Tipagem | TypeScript | Usado na camada de banco e ORM |
-| Banco de Dados | MySQL | Banco relacional principal |
-| Containerização | Docker + Docker Compose | Ambiente do MySQL em container |
+| Banco de Dados | PostgreSQL | Banco relacional principal |
+| Containerização | Docker + Docker Compose | Ambiente do PostgreSQL em container |
 | Versionamento | GitHub | Controle de código-fonte e colaboração |
 | Gestão de Tarefas | Microsoft Planner | Controle de sprints e progresso |
 | Infraestrutura | Cloud (a definir) | Deploy e disponibilização da aplicação |
@@ -56,7 +56,7 @@ O sistema adota uma **arquitetura modular em três camadas**, com separação cl
 ```
 /prodesp-edital-automator
 │
-├── docker-compose.yml        # Configuração do MySQL no Docker
+├── docker-compose.yml        # Configuração do PostgreSQL no Docker
 ├── .env                      # Variáveis de ambiente sensíveis (senha do banco, porta)
 ├── package.json              # Registro de dependências (npm install)
 │
@@ -372,21 +372,22 @@ O sistema deve permitir que o Administrador selecione e preencha as seguintes se
 
 ### 7.1 Ambiente de Desenvolvimento (Docker)
 
-O banco de dados MySQL roda em container Docker, garantindo consistência entre os ambientes de todos os desenvolvedores.
+O banco de dados PostgreSQL roda em container Docker, garantindo consistência entre os ambientes de todos os desenvolvedores.
 
 ```yaml
 # docker-compose.yml (estrutura prevista)
 version: '3.8'
 services:
   db:
-    image: mysql:8.0
+    image: postgres:16-alpine
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: prodesp_editais
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: prodesp_editais
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
 
 volumes:
   db_data:
@@ -395,7 +396,7 @@ volumes:
 ### 7.2 Variáveis de Ambiente (`.env`)
 
 ```env
-DATABASE_URL="mysql://root:senha@localhost:3306/prodesp_editais"
+DATABASE_URL="postgresql://postgres:senha@localhost:5432/prodesp_editais"
 PORT=3000
 JWT_SECRET=sua_chave_secreta
 ```
@@ -405,7 +406,7 @@ JWT_SECRET=sua_chave_secreta
 A equipe Cloud (Henrique, Kaio e Enzo Nunez) é responsável pela infraestrutura de produção. O deploy incluirá:
 
 - Hospedagem da aplicação Node.js em serviço cloud (a definir)
-- Banco de dados MySQL gerenciado ou em container cloud
+- Banco de dados PostgreSQL gerenciado ou em container cloud
 - Configuração de domínio e HTTPS
 - Monitoramento de disponibilidade
 

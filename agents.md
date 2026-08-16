@@ -241,7 +241,7 @@ RASCUNHO → AGUARDANDO_REVISÃO_JURIDICA → EM_REVISÃO_JURIDICA
 ### 2.4 Agente de Auditoria (Logger)
 
 **Tipo:** Passivo — registra todas as ações do sistema  
-**Tecnologia:** Back-end Node.js + tabela de auditoria no MySQL
+**Tecnologia:** Back-end Node.js + tabela de auditoria no PostgreSQL
 
 **Responsabilidades:**
 - Registrar automaticamente cada ação realizada no sistema
@@ -314,6 +314,6 @@ Requisição → [Middleware de Autenticação] → [Middleware RBAC] → Contro
 | Notificação | Evento-acionado | Node.js | Alertas automáticos por mudança de status |
 | Validação de Formulário | Síncrono | Node.js + Prisma | Verificação de campos antes do salvamento |
 | Controle de Fluxo | Orquestrador | Node.js + Prisma | Gerencia estados e transições do edital |
-| Auditoria (Logger) | Passivo | Node.js + MySQL | Registra todas as ações com rastreabilidade |
+| Auditoria (Logger) | Passivo | Node.js + PostgreSQL | Registra todas as ações com rastreabilidade |
 | Controle de Acesso (RBAC) | Middleware | Node.js | Autorização por perfil em cada rota da API |
 | Geração de Documento | Sob demanda | Node.js + lib PDF | Gera o PDF do edital seguindo o modelo oficial PRODESP |
