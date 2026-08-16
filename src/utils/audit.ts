@@ -1,5 +1,5 @@
 // Agente de Auditoria (Logger) — registra toda ação no sistema com usuário e data/hora UTC.
-import { Prisma, StatusEdital, TipoAcao } from "@prisma/client";
+import { Prisma, StatusEdital, TipoAcao } from "../generated/prisma/client";
 import prisma from "../database";
 
 interface AuditoriaInput {

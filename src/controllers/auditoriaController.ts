@@ -1,6 +1,6 @@
 // Controller de Auditoria — histórico de ações (acesso apenas ao Administrador).
 import { Request, Response } from "express";
-import { Prisma, TipoAcao } from "@prisma/client";
+import { Prisma, TipoAcao } from "../generated/prisma/client";
 import prisma from "../database";
 
 export async function listarAuditorias(req: Request, res: Response): Promise<void> {

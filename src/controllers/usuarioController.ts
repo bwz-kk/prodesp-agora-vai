@@ -1,7 +1,7 @@
 // Controller de Usuários — gestão de usuários (acesso apenas ao Administrador).
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import { Perfil } from "@prisma/client";
+import { Perfil } from "../generated/prisma/client";
 import prisma from "../database";
 
 export async function listarUsuarios(req: Request, res: Response): Promise<void> {

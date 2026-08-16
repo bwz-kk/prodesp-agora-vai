@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Perfil } from "@prisma/client";
+import { Perfil } from "../generated/prisma/client";
 import {
   criarEdital,
   listarEditais,

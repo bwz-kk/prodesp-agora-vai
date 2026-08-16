@@ -1,9 +1,11 @@
 // Seed — cria um usuário de demonstração para cada perfil do sistema.
 // Senha padrão para todos: "123456" (somente para ambiente de desenvolvimento).
-import { PrismaClient, Perfil } from "@prisma/client";
+import { PrismaClient, Perfil } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg(process.env.DATABASE_URL!);
+const prisma = new PrismaClient({ adapter });
 
 const USUARIOS: Array<{ nome: string; email: string; perfil: Perfil }> = [
   { nome: "Administrador", email: "admin@prodesp.gov.br", perfil: Perfil.ADMINISTRADOR },

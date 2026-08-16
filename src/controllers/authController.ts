@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../database";
 import { registrarAuditoria } from "../utils/audit";
-import { TipoAcao } from "@prisma/client";
+import { TipoAcao } from "../generated/prisma/client";
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, senha } = req.body ?? {};

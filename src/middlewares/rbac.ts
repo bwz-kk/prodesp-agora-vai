@@ -1,6 +1,6 @@
 // Agente de Controle de Acesso (RBAC) — autorização por perfil (camada 2)
 import { Request, Response, NextFunction } from "express";
-import { Perfil } from "@prisma/client";
+import { Perfil } from "../generated/prisma/client";
 
 export function autorizar(...perfisPermitidos: Perfil[]) {
   return (req: Request, res: Response, next: NextFunction): void => {

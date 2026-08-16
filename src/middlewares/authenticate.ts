@@ -1,7 +1,7 @@
 // Agente de Controle de Acesso — autenticação via JWT (camada 1 do RBAC)
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { Perfil } from "@prisma/client";
+import { Perfil } from "../generated/prisma/client";
 
 export interface AuthPayload {
   id: number;

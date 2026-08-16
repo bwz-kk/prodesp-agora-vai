@@ -1,6 +1,6 @@
 // Agente de Controle de Fluxo (Workflow Engine)
 // Centraliza a máquina de estados do edital e as regras de transição por perfil.
-import { StatusEdital, Perfil, TipoAcao } from "@prisma/client";
+import { StatusEdital, Perfil, TipoAcao } from "../generated/prisma/client";
 
 export interface Transicao {
   acao: TipoAcao;

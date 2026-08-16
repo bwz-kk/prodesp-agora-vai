@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Perfil } from "@prisma/client";
+import { Perfil } from "../generated/prisma/client";
 import { listarAuditorias } from "../controllers/auditoriaController";
 import { autenticar } from "../middlewares/authenticate";
 import { autorizar } from "../middlewares/rbac";

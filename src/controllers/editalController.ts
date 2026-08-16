@@ -7,7 +7,7 @@ import {
   ResultadoParecer,
   TipoAcao,
   Perfil,
-} from "@prisma/client";
+} from "../generated/prisma/client";
 import prisma from "../database";
 import { encontrarTransicao } from "../utils/workflow";
 import { registrarAuditoria } from "../utils/audit";
