@@ -34,7 +34,7 @@ export const TRANSICOES: Transicao[] = [
   // Jurídico solicita correções → retorna ao administrador
   {
     acao: TipoAcao.SOLICITAR_CORRECAO,
-    origem: [StatusEdital.EM_REVISAO_JURIDICA],
+    origem: [StatusEdital.EM_REVISAO_JURIDICA, StatusEdital.AGUARDANDO_REVISAO_JURIDICA],
     destino: StatusEdital.EM_CORRECAO,
     perfisPermitidos: [Perfil.JURIDICO],
   },
@@ -55,7 +55,7 @@ export const TRANSICOES: Transicao[] = [
   // Técnico solicita ajustes → retorna ao administrador
   {
     acao: TipoAcao.SOLICITAR_CORRECAO,
-    origem: [StatusEdital.EM_REVISAO_TECNICA],
+    origem: [StatusEdital.EM_REVISAO_TECNICA, StatusEdital.AGUARDANDO_REVISAO_TECNICA],
     destino: StatusEdital.EM_CORRECAO,
     perfisPermitidos: [Perfil.TECNICO],
   },
