@@ -11,11 +11,16 @@ import {
 import prisma from "../database";
 import { encontrarTransicao } from "../utils/workflow";
 import { registrarAuditoria } from "../utils/audit";
+import { notificarTransicao } from "../utils/notificacao";
 
 interface DadosEdital {
   numero?: string;
   nome?: string;
   descricao?: string;
+  orgao?: string;
+  modalidade?: string;
+  valorEstimado?: number;
+  propostas?: number;
   dataPublicacao?: string;
   prazoVigencia?: string;
   pdfPath?: string;
@@ -59,6 +64,10 @@ export async function criarEdital(req: Request, res: Response): Promise<void> {
         numero: String(numero),
         nome: String(nome),
         descricao,
+        orgao: dados.orgao,
+        modalidade: dados.modalidade,
+        valorEstimado: dados.valorEstimado != null ? Number(dados.valorEstimado) : null,
+        propostas: dados.propostas != null ? Number(dados.propostas) : 0,
         dataPublicacao: parseData(dataPublicacao),
         prazoVigencia: parseData(prazoVigencia),
         pdfPath,
@@ -164,6 +173,10 @@ export async function atualizarEdital(req: Request, res: Response): Promise<void
       numero: dados.numero,
       nome: dados.nome,
       descricao: dados.descricao,
+      orgao: dados.orgao,
+      modalidade: dados.modalidade,
+      valorEstimado: dados.valorEstimado != null ? Number(dados.valorEstimado) : null,
+      propostas: dados.propostas != null ? Number(dados.propostas) : undefined,
       dataPublicacao: parseData(dados.dataPublicacao),
       prazoVigencia: parseData(dados.prazoVigencia),
       ...(pdfPath ? { pdfPath } : {}),
@@ -216,6 +229,9 @@ export async function transicionarStatus(req: Request, res: Response): Promise<v
       estadoPosterior: atualizado.status,
       observacoes: req.body.observacoes,
     });
+
+    // Agente de Notificação — alerta os perfis da próxima etapa
+    await notificarTransicao(atualizado, destino);
 
     res.json(atualizado);
   } catch (err) {

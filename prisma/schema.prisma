@@ -78,9 +78,10 @@ model Usuario {
   perfil    Perfil
   criadoEm  DateTime @default(now())
 
-  editais     Edital[]    @relation("EditalAutor")
-  pareceres   Parecer[]   @relation("ParecerAutor")
-  auditorias  Auditoria[] @relation("AuditoriaUsuario")
+  editais       Edital[]       @relation("EditalAutor")
+  pareceres     Parecer[]      @relation("ParecerAutor")
+  auditorias    Auditoria[]    @relation("AuditoriaUsuario")
+  notificacoes  Notificacao[]
 }
 
 model Edital {
@@ -89,6 +90,10 @@ model Edital {
   numero         String       @unique
   nome           String
   descricao      String?
+  orgao          String?
+  modalidade     String?
+  valorEstimado  Float?
+  propostas      Int          @default(0)
   dataPublicacao DateTime?
   prazoVigencia  DateTime?
   pdfPath        String?
@@ -97,8 +102,9 @@ model Edital {
   criadoPorId Int
   criadoPor   Usuario     @relation("EditalAutor", fields: [criadoPorId], references: [id])
 
-  pareceres   Parecer[]
-  auditorias  Auditoria[]
+  pareceres     Parecer[]
+  auditorias    Auditoria[]
+  notificacoes  Notificacao[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -130,4 +136,19 @@ model Auditoria {
 
   usuarioId Int
   usuario   Usuario @relation("AuditoriaUsuario", fields: [usuarioId], references: [id])
+}
+
+// Notificações — Agente de Notificação (alertas por mudança de status e prazos)
+model Notificacao {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  mensagem  String
+  tipo      String   @default("STATUS") // STATUS | PRAZO | SISTEMA
+  lida      Boolean  @default(false)
+  editalId  Int?
+  edital    Edital?  @relation(fields: [editalId], references: [id], onDelete: Cascade)
+  criadoEm  DateTime @default(now())
+
+  usuarioId Int
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }

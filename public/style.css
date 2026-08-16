@@ -239,6 +239,35 @@ label .req { color: var(--err); }
 .topbar .bell { position: relative; color: var(--muted); cursor: pointer; }
 .topbar .bell svg { width: 20px; height: 20px; }
 .topbar .bell .dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--err); }
+.topbar .bell .badge {
+  position: absolute; top: -7px; right: -9px;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  border-radius: 999px; background: var(--err); color: #fff;
+  font-size: .62rem; font-weight: 700; line-height: 17px;
+  display: flex; align-items: center; justify-content: center;
+}
+.notif-dropdown {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  width: 340px; max-width: 90vw;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow-md);
+  z-index: 100; overflow: hidden; text-align: left;
+}
+.notif-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .7rem .9rem; border-bottom: 1px solid var(--border);
+}
+.notif-head b { font-size: .9rem; color: var(--heading); }
+.notif-markall { background: none; border: none; color: var(--primary); font-size: .75rem; cursor: pointer; font: inherit; }
+.notif-list { max-height: 360px; overflow-y: auto; }
+.notif-item { padding: .7rem .9rem; border-bottom: 1px solid var(--border); cursor: pointer; }
+.notif-item:hover { background: var(--page); }
+.notif-item.unread { background: var(--lavender); }
+.notif-item:last-child { border-bottom: none; }
+.notif-title { font-size: .82rem; font-weight: 600; color: var(--heading); }
+.notif-msg { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+.notif-meta { font-size: .7rem; color: var(--muted); margin-top: .3rem; }
+.notif-empty { padding: 1rem; text-align: center; color: var(--muted); font-size: .82rem; }
 .topbar .tuser { display: flex; align-items: center; gap: .6rem; }
 .topbar .tuser .av { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; }
 .topbar .tuser .info { line-height: 1.2; }

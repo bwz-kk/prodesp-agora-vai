@@ -60,7 +60,6 @@ const NAV_CONFIG = {
     { view: "licitacao", label: "Solicitar Licitação", icon: "plus" },
   ],
 };
-
 // Ícones (SVG outline)
 const ICONS = {
   dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
@@ -83,6 +82,8 @@ const ICONS = {
   warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
   folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2z"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
 };
 
 function icon(name) { return ICONS[name] || ""; }
@@ -90,7 +91,7 @@ function icon(name) { return ICONS[name] || ""; }
 const state = {
   token: localStorage.getItem("token") || sessionStorage.getItem("token") || null,
   usuario: null,
-  demoProfile: null, // chave do perfil de demonstração ativo
+  demoProfile: null,
 };
 
 // ---------- API helper ----------
@@ -115,14 +116,6 @@ function elHtml(tag, cls, html) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
   if (html != null) n.innerHTML = html;
-  return n;
-}
-function fmtData(d) { return d ? new Date(d).toLocaleDateString("pt-BR") : "—"; }
-function initials(nome) {
-  const p = (nome || "?").trim().split(/\s+/);
-  return ((p[0]?.[0] || "") + (p[1]?.[0] || "")).toUpperCase() || "?";
-}
-
 // ---------- Navegação / views ----------
 const VIEWS = ["dashboard", "editais", "cadastro", "edital", "juridico", "tecnico", "gestor", "admin", "auditoria", "comunicacao", "licitacao"];
 
@@ -233,7 +226,7 @@ function bindLogin() {
     const i = $("#login-senha");
     i.type = i.type === "password" ? "text" : "password";
   });
-  $("#login-forgot").addEventListener("click", (e) => { e.preventDefault(); alert("Recuperação de senha ainda não integrada ao back-end."); });
+  $("#login-forgot").addEventListener("click", (e) => { e.preventDefault(); alert("Recuperação de senha: entre em contato com o administrador do sistema."); });
 }
 
 function entrarApp() {
@@ -241,9 +234,11 @@ function entrarApp() {
   $("#view-app").hidden = false;
   renderShell();
   route("dashboard");
+  startNotifPolling();
 }
 
 function logout() {
+  stopNotifPolling();
   state.token = null;
   state.usuario = null;
   localStorage.removeItem("token");
@@ -251,22 +246,92 @@ function logout() {
   $("#view-app").hidden = true;
   $("#view-login").hidden = false;
 }
+// ---------- Notificações ----------
+let notifPollTimer = null;
 
-// ---------- Dados de demonstração (dashboard) ----------
-const DEMO_EDITAIS = [
-  { numero: "001/2024", nome: "Aquisição de Infraestrutura de TI", orgao: "SEFAZ", status: "EM_ANDAMENTO", valor: "R$ 2.450.000", prazo: "15/09/2024", propostas: 7 },
-  { numero: "002/2024", nome: "Consultoria em Segurança da Informação", orgao: "SSP", status: "PUBLICADO", valor: "R$ 890.000", prazo: "22/08/2024", propostas: 12 },
-  { numero: "003/2024", nome: "Licenças de Software Corporativo", orgao: "PRODESP", status: "EM_ANALISE", valor: "R$ 1.200.000", prazo: "30/09/2024", propostas: 5 },
-  { numero: "004/2024", nome: "Manutenção de Sistemas Legados", orgao: "DETRAN", status: "EM_ANDAMENTO", valor: "R$ 3.100.000", prazo: "10/10/2024", propostas: 3 },
-  { numero: "005/2024", nome: "Plataforma de Cloud Computing", orgao: "PRODESP", status: "PUBLICADO", valor: "R$ 5.700.000", prazo: "05/11/2024", propostas: 18 },
-];
+async function refreshNotifBadge() {
+  if (!state.token) return;
+  try {
+    const d = await api("/notificacoes/nao-lidas");
+    const n = d.naoLidas || 0;
+    const badge = $("#bell-badge");
+    const dot = $("#bell-dot");
+    if (n > 0) {
+      badge.textContent = n > 99 ? "99+" : String(n);
+      badge.hidden = false;
+      dot.hidden = false;
+    } else {
+      badge.hidden = true;
+      dot.hidden = true;
+    }
+  } catch { /* ignora */ }
+}
 
-const DEMO_STATUS = {
-  EM_ANDAMENTO: { label: "Em Andamento", cls: "pill-info" },
-  PUBLICADO: { label: "Publicado", cls: "pill-ok" },
-  EM_ANALISE: { label: "Em Análise", cls: "pill-warn" },
-};
+function notifDropdown() {
+  let d = $("#notif-dropdown");
+  if (!d) {
+    d = el("div", "notif-dropdown");
+    d.id = "notif-dropdown";
+    d.hidden = true;
+    $("#bell").appendChild(d);
+  }
+  return d;
+}
 
+async function loadNotifList(d) {
+  let list = d.querySelector(".notif-list");
+  if (!list) { list = el("div", "notif-list"); d.appendChild(list); }
+  list.innerHTML = "";
+  try {
+    const data = await api("/notificacoes");
+    if (!data.notificacoes.length) {
+      list.appendChild(el("p", "notif-empty", "Nenhuma notificação."));
+      return;
+    }
+    data.notificacoes.forEach((n) => {
+      const item = el("div", "notif-item" + (n.lida ? "" : " unread"));
+      item.appendChild(el("div", "notif-title", n.titulo));
+      item.appendChild(el("div", "notif-msg", n.mensagem));
+      item.appendChild(el("div", "notif-meta", new Date(n.criadoEm).toLocaleString("pt-BR")));
+      item.addEventListener("click", async () => {
+        if (!n.lida) { await api(`/notificacoes/${n.id}/lida`, { method: "POST" }); refreshNotifBadge(); }
+        d.hidden = true;
+        if (n.editalId) abrirEdital(n.editalId);
+      });
+      list.appendChild(item);
+    });
+  } catch (ex) {
+    list.appendChild(el("p", "notif-empty", ex.message));
+  }
+}
+
+async function toggleNotif() {
+  const d = notifDropdown();
+  if (!d.hidden) { d.hidden = true; return; }
+  d.innerHTML = "";
+  const head = el("div", "notif-head");
+  head.appendChild(el("b", "", "Notificações"));
+  const markAll = el("button", "notif-markall", "Marcar todas como lidas");
+  markAll.addEventListener("click", async () => {
+    await api("/notificacoes/lidas", { method: "POST" });
+    await loadNotifList(d);
+    refreshNotifBadge();
+  });
+  head.appendChild(markAll);
+  d.appendChild(head);
+  await loadNotifList(d);
+  d.hidden = false;
+}
+
+function startNotifPolling() {
+  stopNotifPolling();
+  refreshNotifBadge();
+  notifPollTimer = setInterval(refreshNotifBadge, 30000);
+}
+function stopNotifPolling() {
+  if (notifPollTimer) { clearInterval(notifPollTimer); notifPollTimer = null; }
+}
+// ---------- Dashboard ----------
 function statusPill(status) {
   const map = {
     RASCUNHO: "pill-muted",
@@ -283,67 +348,58 @@ function statusPill(status) {
   return { label: STATUS_LABEL[status] || status, cls: map[status] || "pill-muted" };
 }
 
-function kpiCard(label, value, trend, trendCls, iconName, iconCls) {
+function kpiCard(label, value, sub, iconName, iconCls) {
   const c = el("div", "card");
   const k = el("div", "kpi");
   const left = el("div");
   left.appendChild(el("div", "kpi-label", label));
   left.appendChild(el("div", "kpi-value", value));
-  left.appendChild(elHtml("span", "kpi-trend " + trendCls, icon(trendCls === "up" ? "up" : "down") + trend));
+  left.appendChild(el("div", "kpi-trend", sub));
   k.appendChild(left);
   k.appendChild(elHtml("div", "kpi-icon " + iconCls, icon(iconName)));
   c.appendChild(k);
   return c;
 }
 
-function lineChart() {
-  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago"];
-  const editais = [10, 14, 12, 18, 22, 20, 26, 30];
-  const propostas = [20, 28, 34, 40, 48, 55, 62, 70];
-  const W = 300, H = 160, padL = 34, padB = 24, padT = 12, padR = 8;
-  const max = 80;
-  const x = (i) => padL + (i * (W - padL - padR)) / (months.length - 1);
-  const y = (v) => padT + (H - padT - padB) * (1 - v / max);
-  let grid = "";
-  for (let g = 0; g <= 4; g++) {
-    const v = (g / 4) * max;
-    const gy = y(v);
-    grid += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="#eef0f4" stroke-width="1"/>';
-    grid += '<text x="' + (padL - 6) + '" y="' + (gy + 3) + '" text-anchor="end" font-size="8" fill="#9aa3b2">' + v + '</text>';
-  }
-  const path = (arr) => arr.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
-  const area = (arr) => path(arr) + " L" + x(arr.length - 1).toFixed(1) + " " + (H - padB) + " L" + x(0).toFixed(1) + " " + (H - padB) + " Z";
+function lineChart(porMes) {
+  const W = 520, H = 220, pad = 34;
+  const n = porMes.length;
+  const max = Math.max(1, ...porMes.map((d) => d.total));
+  const x = (i) => pad + (i * (W - 2 * pad)) / (n - 1);
+  const y = (v) => H - pad - (v / max) * (H - 2 * pad);
+  const pts = porMes.map((d, i) => ({ x: x(i), y: y(d.total) }));
+  const path = pts.map((p, i) => (i ? "L" : "M") + p.x.toFixed(1) + " " + p.y.toFixed(1)).join(" ");
+  const area = path + " L" + x(n - 1).toFixed(1) + " " + (H - pad) + " L" + pad + " " + (H - pad) + " Z";
   let labels = "";
-  months.forEach((m, i) => { labels += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="8" fill="#9aa3b2">' + m + '</text>'; });
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="160" preserveAspectRatio="none">' +
-    grid +
+  porMes.forEach((d, i) => { labels += '<text x="' + x(i) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="9" fill="#6b7280">' + d.mes + '</text>'; });
+  let dots = "";
+  pts.forEach((p) => { dots += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3" fill="#6d28d9"/>'; });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">' +
     '<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d28d9" stop-opacity="0.25"/><stop offset="1" stop-color="#6d28d9" stop-opacity="0"/></linearGradient></defs>' +
-    '<path d="' + area(propostas) + '" fill="url(#g1)"/>' +
-    '<path d="' + path(editais) + '" fill="none" stroke="#2563eb" stroke-width="2"/>' +
-    '<path d="' + path(propostas) + '" fill="none" stroke="#6d28d9" stroke-width="2"/>' +
-    labels + '</svg>';
+    '<path d="' + area + '" fill="url(#g1)"/>' +
+    '<path d="' + path + '" fill="none" stroke="#6d28d9" stroke-width="2"/>' +
+    dots + labels + '</svg>';
 }
 
-function donutChart() {
-  const segs = [
-    { v: 45, c: "#16a34a", l: "Aprovadas" },
-    { v: 30, c: "#6d28d9", l: "Em Análise" },
-    { v: 15, c: "#f59e0b", l: "Pendentes" },
-    { v: 10, c: "#dc2626", l: "Reprovadas" },
-  ];
+function donutChart(porStatus) {
+  const colors = { PUBLICADO: "#16a34a", REPROVADO: "#dc2626", EM_CORRECAO: "#f59e0b", RASCUNHO: "#9ca3af" };
+  const palette = ["#6d28d9", "#2563eb", "#0ea5e9", "#16a34a", "#f59e0b", "#dc2626", "#9ca3af", "#8b5cf6", "#ec4899", "#14b8a6"];
+  const total = porStatus.reduce((a, s) => a + s.total, 0);
   const r = 40, cx = 50, cy = 50, circ = 2 * Math.PI * r;
   let offset = 0, arcs = "";
-  segs.forEach((s) => {
-    const len = (s.v / 100) * circ;
-    arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + s.c + '" stroke-width="14" stroke-dasharray="' + len.toFixed(2) + ' ' + (circ - len).toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+  porStatus.forEach((s, i) => {
+    const len = total ? (s.total / total) * circ : 0;
+    const c = colors[s.status] || palette[i % palette.length];
+    arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + c + '" stroke-width="14" stroke-dasharray="' + len.toFixed(2) + ' ' + (circ - len).toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
     offset += len;
   });
   const svg = '<svg viewBox="0 0 100 100" width="150" height="150">' + arcs +
-    '<text x="50" y="47" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">87</text>' +
-    '<text x="50" y="60" text-anchor="middle" font-size="7" fill="#6b7280">Propostas</text></svg>';
+    '<text x="50" y="47" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">' + total + '</text>' +
+    '<text x="50" y="60" text-anchor="middle" font-size="7" fill="#6b7280">Editais</text></svg>';
   const legend = el("div", "chart-legend");
-  segs.forEach((s) => {
-    legend.appendChild(elHtml("div", "lg", '<span class="sw" style="background:' + s.c + '"></span>' + s.l + '<b>' + s.v + '%</b>'));
+  porStatus.forEach((s, i) => {
+    const c = colors[s.status] || palette[i % palette.length];
+    legend.appendChild(elHtml("div", "lg", '<span class="sw" style="background:' + c + '"></span>' + (STATUS_LABEL[s.status] || s.status) + '<b>' + s.total + '</b>'));
   });
   const wrap = el("div");
   wrap.appendChild(elHtml("div", "", svg));
@@ -351,7 +407,15 @@ function donutChart() {
   return wrap;
 }
 
-// ---------- Dashboard ----------
+
+
+  return n;
+}
+function fmtData(d) { return d ? new Date(d).toLocaleDateString("pt-BR") : "—"; }
+function fmtMoeda(v) {
+  if (v == null || v === "" || Number.isNaN(Number(v))) return "—";
+  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 async function loadDashboard() {
   const v = $("#view-dashboard");
   v.innerHTML = "";
@@ -365,11 +429,20 @@ async function loadDashboard() {
   head.appendChild(hLeft);
   v.appendChild(head);
 
+  let d;
+  try {
+    d = await api("/dashboard");
+  } catch (ex) {
+    v.appendChild(el("p", "error", ex.message));
+    return;
+  }
+
+  const t = d.totais;
   const kpis = el("div", "grid grid-4");
-  kpis.appendChild(kpiCard("EDITAIS ATIVOS", "22", "+10% vs. mês ant.", "up", "doc", "blue"));
-  kpis.appendChild(kpiCard("PROPOSTAS EM ANÁLISE", "87", "+5% vs. mês ant.", "up", "clipboard", "purple"));
-  kpis.appendChild(kpiCard("TAXA DE APROVAÇÃO", "73%", "+3% vs. mês ant.", "up", "check", "green"));
-  kpis.appendChild(kpiCard("PRAZO MÉDIO (DIAS)", "28", "-8% vs. mês ant.", "down", "clock", "orange"));
+  kpis.appendChild(kpiCard("EDITAIS ATIVOS", String(t.ativos), t.emAnalise + " em análise", "doc", "blue"));
+  kpis.appendChild(kpiCard("EM ANÁLISE", String(t.emAnalise), t.publicados + " publicados", "clipboard", "purple"));
+  kpis.appendChild(kpiCard("TAXA DE APROVAÇÃO", t.taxaAprovacao + "%", t.publicados + " publicados", "check", "green"));
+  kpis.appendChild(kpiCard("PRAZO MÉDIO (DIAS)", String(t.prazoMedio), t.total + " editais no total", "clock", "orange"));
   v.appendChild(kpis);
 
   const row = el("div", "grid grid-2");
@@ -394,7 +467,15 @@ async function loadDashboard() {
   thead.appendChild(trh);
   table.appendChild(thead);
   const tbody = el("tbody");
-  DEMO_EDITAIS.forEach((e) => {
+  if (!d.recentes.length) {
+    const tr = el("tr");
+    const td = el("td", "", "Nenhum edital cadastrado ainda.");
+    td.colSpan = 6;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+  d.recentes.forEach((e) => {
+    const sp = statusPill(e.status);
     const tr = el("tr");
     tr.appendChild(el("td", "num", e.numero));
     const title = el("td", "title-cell");
@@ -402,11 +483,11 @@ async function loadDashboard() {
     title.appendChild(el("span", "", e.orgao));
     tr.appendChild(title);
     const st = el("td");
-    st.appendChild(el("span", "pill " + DEMO_STATUS[e.status].cls, DEMO_STATUS[e.status].label));
+    st.appendChild(el("span", "pill " + sp.cls, sp.label));
     tr.appendChild(st);
-    tr.appendChild(el("td", "val", e.valor));
-    tr.appendChild(elHtml("td", "date", icon("calendar") + e.prazo));
-    tr.appendChild(el("td", "", String(e.propostas)));
+    tr.appendChild(el("td", "val", fmtMoeda(e.valorEstimado)));
+    tr.appendChild(elHtml("td", "date", icon("calendar") + fmtData(e.prazoVigencia)));
+    tr.appendChild(el("td", "", String(e.propostas ?? 0)));
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
@@ -416,76 +497,76 @@ async function loadDashboard() {
   const chartCard = el("div", "card");
   const ccHead = el("div", "card-head");
   const ccTitle = el("div");
-  ccTitle.appendChild(el("h3", "", "Indicadores de Desempenho"));
+  ccTitle.appendChild(el("h3", "", "Editais Criados por Mês"));
   ccTitle.appendChild(el("div", "sub", "Últimos 8 meses"));
   ccHead.appendChild(ccTitle);
   const att = el("button", "btn btn-ghost btn-sm", "Atualizar");
   att.addEventListener("click", loadDashboard);
   ccHead.appendChild(att);
   chartCard.appendChild(ccHead);
-  chartCard.appendChild(elHtml("div", "", lineChart()));
-  const legend = elHtml("div", "chart-legend", '<div class="lg"><span class="sw" style="background:#2563eb"></span>Editais</div><div class="lg"><span class="sw" style="background:#6d28d9"></span>Propostas</div>');
-  legend.style.flexDirection = "row";
-  legend.style.gap = "1rem";
-  legend.style.marginTop = ".5rem";
-  chartCard.appendChild(legend);
+  chartCard.appendChild(elHtml("div", "", lineChart(d.porMes)));
   row.appendChild(chartCard);
   v.appendChild(row);
 
+function initials(nome) {
   const lower = el("div", "grid grid-3");
   lower.style.marginTop = "1rem";
 
   const donutCard = el("div", "card");
-  donutCard.appendChild(el("h3", "", "Propostas em Análise"));
-  donutCard.appendChild(el("div", "sub", "Distribuição por status"));
-  donutCard.appendChild(donutChart());
+  donutCard.appendChild(el("h3", "", "Editais por Status"));
+  donutCard.appendChild(el("div", "sub", "Distribuição atual"));
+  donutCard.appendChild(donutChart(d.porStatus));
   lower.appendChild(donutCard);
 
   const pubCard = el("div", "card");
   const pubHead = el("div", "card-head");
-  pubHead.appendChild(el("h3", "", "Editais Publicados"));
+  pubHead.appendChild(el("h3", "", "Último Edital Publicado"));
   const novo = elHtml("button", "btn btn-primary btn-sm", icon("plus") + " Novo");
   novo.addEventListener("click", () => route("cadastro"));
   pubHead.appendChild(novo);
   pubCard.appendChild(pubHead);
-  const pub = el("div");
-  const pubTop = el("div", "ac-top");
-  pubTop.appendChild(elHtml("div", "doc-ico", icon("doc")));
-  const pubInfo = el("div", "ac-title");
-  pubInfo.appendChild(el("div", "org", "002/2024"));
-  pubInfo.appendChild(el("h4", "", "Consultoria em Segurança da Informação"));
-  pubTop.appendChild(pubInfo);
-  pub.appendChild(pubTop);
-  pub.appendChild(elHtml("div", "ac-meta", "<span><b>R$ 890.000</b></span><span>12 propostas</span><span>Prazo: 22/08/2024</span>"));
-  pub.appendChild(el("span", "pill pill-ok", "Publicado"));
-  pubCard.appendChild(pub);
+  if (d.ultimoPublicado) {
+    const up = d.ultimoPublicado;
+    const pub = el("div");
+    const pubTop = el("div", "ac-top");
+    pubTop.appendChild(elHtml("div", "doc-ico", icon("doc")));
+    const pubInfo = el("div", "ac-title");
+    pubInfo.appendChild(el("div", "org", up.numero));
+    pubInfo.appendChild(el("h4", "", up.nome));
+    pubTop.appendChild(pubInfo);
+    pub.appendChild(pubTop);
+    pub.appendChild(elHtml("div", "ac-meta", "<span><b>" + fmtMoeda(up.valorEstimado) + "</b></span><span>" + (up.propostas ?? 0) + " propostas</span><span>Prazo: " + fmtData(up.prazoVigencia) + "</span>"));
+    pub.appendChild(el("span", "pill pill-ok", "Publicado"));
+    pubCard.appendChild(pub);
+  } else {
+    pubCard.appendChild(el("p", "muted", "Nenhum edital publicado ainda."));
+  }
   lower.appendChild(pubCard);
 
   const pendCard = el("div", "card");
   pendCard.appendChild(el("h3", "", "Pendências"));
-  pendCard.appendChild(el("div", "sub", "Itens que exigem ação"));
+  pendCard.appendChild(el("div", "sub", "Itens que exigem sua ação"));
   const pendList = el("div");
   pendList.style.marginTop = ".5rem";
-  [
-    { pri: "high", t: "Documentação técnica pendente", s: "Edital 003/2024 · 30/09/2024" },
-    { pri: "med", t: "Parecer jurídico aguardando", s: "Edital 001/2024 · 15/09/2024" },
-    { pri: "med", t: "Revisão de propostas", s: "Edital 004/2024 · 10/10/2024" },
-  ].forEach((p) => {
+  if (!d.pendencias.length) {
+    pendList.appendChild(el("p", "muted", "Nenhuma pendência para seu perfil."));
+  }
+  d.pendencias.forEach((p) => {
     const item = el("div", "pending-item");
-    item.appendChild(el("span", "pri " + p.pri));
+    item.appendChild(el("span", "pri med"));
     const body = el("div", "body");
-    body.appendChild(el("b", "", p.t));
-    body.appendChild(el("span", "", p.s));
+    body.appendChild(el("b", "", p.nome));
+    body.appendChild(el("span", "", "Edital " + p.numero + " · " + (STATUS_LABEL[p.status] || p.status)));
     item.appendChild(body);
     item.appendChild(elHtml("span", "arrow", icon("chevron")));
+    item.addEventListener("click", () => abrirEdital(p.id));
     pendList.appendChild(item);
   });
   pendCard.appendChild(pendList);
   lower.appendChild(pendCard);
   v.appendChild(lower);
 }
-
-// ---------- Gestão de Editais (tabs: visualizar / aprovar) ----------
+// ---------- Gestão de Editais ----------
 let editaisTab = "visualizar";
 let editaisCache = [];
 
@@ -503,90 +584,14 @@ function toast(msg) {
   t._t = setTimeout(() => { t.style.opacity = "0"; }, 2200);
 }
 
-function editaisTableRows() {
-  const rows = [];
-  editaisCache.forEach((e) => {
-    rows.push({
-      numero: e.numero, nome: e.nome, orgao: e.criadoPor?.nome || "PRODESP",
-      status: e.status, valor: "—", prazo: fmtData(e.prazoVigencia), propostas: "—",
-      id: e.id, isDemo: false,
-    });
-  });
-  if (!rows.length) {
-    DEMO_EDITAIS.forEach((e) => {
-      rows.push({
-        numero: e.numero, nome: e.nome, orgao: e.orgao, status: e.status,
-        valor: e.valor, prazo: e.prazo, propostas: String(e.propostas), isDemo: true,
-      });
-    });
-  }
-  return rows;
-}
-
-function renderEditaisTable(container, busca) {
-  container.innerHTML = "";
-  const rows = editaisTableRows().filter((r) => {
-    if (!busca) return true;
-    return (r.numero + " " + r.nome + " " + r.orgao).toLowerCase().includes(busca);
-  });
-  const table = el("table", "table");
-  const thead = el("thead");
-  const trh = el("tr");
-  ["Nº EDITAL", "TÍTULO / ÓRGÃO", "STATUS", "VALOR EST.", "PRAZO", "PROPOSTAS", "AÇÕES"].forEach((h) => trh.appendChild(el("th", "", h)));
-  thead.appendChild(trh);
-  table.appendChild(thead);
-  const tbody = el("tbody");
-  if (!rows.length) {
-    const tr = el("tr");
-    const td = el("td", "empty", "Nenhum edital encontrado.");
-    td.colSpan = 7;
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-  }
-  rows.forEach((r) => {
-    const tr = el("tr");
-    tr.appendChild(el("td", "num", r.numero));
-    const title = el("td", "title-cell");
-    title.appendChild(el("b", "", r.nome));
-    title.appendChild(el("span", "", r.orgao));
-    tr.appendChild(title);
-    const st = el("td");
-    const sp = r.isDemo ? DEMO_STATUS[r.status] : statusPill(r.status);
-    st.appendChild(el("span", "pill " + sp.cls, sp.label));
-    tr.appendChild(st);
-    tr.appendChild(el("td", "val", r.valor));
-    tr.appendChild(elHtml("td", "date", icon("calendar") + r.prazo));
-    tr.appendChild(el("td", "", r.propostas));
-    const ac = el("td", "actions");
-    const ver = elHtml("button", "btn btn-ghost btn-sm", icon("eye") + " Ver");
-    ver.addEventListener("click", () => {
-      if (r.isDemo) toast("Edital de demonstração: " + r.numero);
-      else abrirEdital(r.id);
-    });
-    ac.appendChild(ver);
-    const dots = elHtml("button", "icon-btn", icon("dots"));
-    dots.addEventListener("click", () => toast("Mais opções em breve."));
-    ac.appendChild(dots);
-    tr.appendChild(ac);
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  container.appendChild(table);
-}
-
 async function loadEditais() {
   const v = $("#view-editais");
   v.innerHTML = "";
-  try { editaisCache = await api("/editais"); } catch (ex) { editaisCache = []; }
-
   const head = el("div", "page-head");
   const hLeft = el("div");
   hLeft.appendChild(el("h2", "", "Gestão de Editais"));
-  hLeft.appendChild(el("div", "sub", "Visualize e gerencie todos os editais do sistema"));
+  hLeft.appendChild(el("div", "sub", "Visualize e aprove os processos licitatórios"));
   head.appendChild(hLeft);
-  const novo = elHtml("button", "btn btn-primary", icon("plus") + " Novo Edital");
-  novo.addEventListener("click", () => route("cadastro"));
-  head.appendChild(novo);
   v.appendChild(head);
 
   const tabs = el("div", "tabs");
@@ -598,12 +603,19 @@ async function loadEditais() {
   tabs.appendChild(t2);
   v.appendChild(tabs);
 
+  try {
+    editaisCache = await api("/editais");
+  } catch (ex) {
+    v.appendChild(el("p", "error", ex.message));
+    return;
+  }
+
   if (editaisTab === "visualizar") {
     const card = el("div", "table-card");
     const tcHead = el("div", "tc-head");
     const tcTitle = el("div");
-    tcTitle.appendChild(el("h3", "", "Todos os Editais"));
-    tcTitle.appendChild(el("span", "count", String(editaisTableRows().length)));
+    tcTitle.appendChild(el("h3", "", "Editais"));
+    tcTitle.appendChild(el("span", "count", String(editaisCache.length)));
     tcHead.appendChild(tcTitle);
     const search = elHtml("div", "tc-search", icon("search") + '<input type="search" placeholder="Buscar edital..." />');
     tcHead.appendChild(search);
@@ -614,37 +626,33 @@ async function loadEditais() {
     renderEditaisTable(body, "");
     search.querySelector("input").addEventListener("input", (e) => renderEditaisTable(body, e.target.value.toLowerCase()));
   } else {
-    const banner = elHtml("div", "banner warn", icon("warn") + "<span>4 editais aguardam sua aprovação. Decisões registradas são encaminhadas automaticamente aos responsáveis.</span>");
+    const fila = editaisCache.filter((e) => e.status === "AGUARDANDO_APROVACAO_GESTOR" || e.status === "EM_APROVACAO_GESTOR");
+    if (!fila.length) {
+      v.appendChild(el("p", "empty", "Nenhum edital aguardando aprovação final."));
+      return;
+    }
+    const banner = elHtml("div", "banner warn", icon("warn") + "<span>" + fila.length + " edital(is) aguardam aprovação. As decisões são registradas e notificadas automaticamente.</span>");
     v.appendChild(banner);
-
-    const aprovar = [
-      { numero: "001/2024", orgao: "SEFAZ", nome: "Aquisição de Infraestrutura de TI", valor: "R$ 2.450.000", prazo: "15/09/2024", propostas: 7 },
-      { numero: "003/2024", orgao: "PRODESP", nome: "Licenças de Software Corporativo", valor: "R$ 1.200.000", prazo: "30/09/2024", propostas: 5 },
-      { numero: "004/2024", orgao: "DETRAN", nome: "Manutenção de Sistemas Legados", valor: "R$ 3.100.000", prazo: "10/10/2024", propostas: 3 },
-      { numero: "006/2024", orgao: "PRODESP", nome: "Sistema de Monitoramento de Rede", valor: "R$ 780.000", prazo: "20/10/2024", propostas: 0 },
-    ];
     const grid = el("div", "grid grid-2");
-    aprovar.forEach((a) => {
+    fila.forEach((a) => {
       const card = el("div", "card approval-card");
       const top = el("div", "ac-top");
       top.appendChild(elHtml("div", "doc-ico", icon("doc")));
       const ti = el("div", "ac-title");
-      ti.appendChild(el("div", "org", a.numero + " — " + a.orgao));
+      ti.appendChild(el("div", "org", a.numero + " — " + (a.orgao || a.criadoPor?.nome || "PRODESP")));
       ti.appendChild(el("h4", "", a.nome));
       top.appendChild(ti);
       card.appendChild(top);
       card.appendChild(elHtml("div", "ac-meta",
-        "<span>Valor: <b>" + a.valor + "</b></span><span>Prazo: <b>" + a.prazo + "</b></span><span>" + a.propostas + " propostas recebidas</span>"));
+        "<span>Valor: <b>" + fmtMoeda(a.valorEstimado) + "</b></span><span>Prazo: <b>" + fmtData(a.prazoVigencia) + "</b></span><span>" + (a.propostas ?? 0) + " propostas</span>"));
       const acts = el("div", "ac-actions");
       const ap = elHtml("button", "btn btn-ok btn-sm", icon("check") + " Aprovar");
-      ap.addEventListener("click", () => toast("Edital " + a.numero + " aprovado (demonstração)."));
+      ap.addEventListener("click", async () => { await transicionar(a.id, "PUBLICADO"); loadEditais(); });
       const rj = elHtml("button", "btn btn-danger btn-sm", icon("close") + " Rejeitar");
-      rj.addEventListener("click", () => toast("Edital " + a.numero + " rejeitado (demonstração)."));
-      const jus = el("button", "btn btn-ghost btn-sm", "Justificativa");
-      jus.addEventListener("click", () => toast("Justificativa (demonstração)."));
+      rj.addEventListener("click", async () => { await transicionar(a.id, "REPROVADO"); loadEditais(); });
       const det = elHtml("button", "btn btn-primary btn-sm", icon("eye") + " Detalhes");
-      det.addEventListener("click", () => toast("Detalhes do edital " + a.numero + " (demonstração)."));
-      [ap, rj, jus, det].forEach((b) => acts.appendChild(b));
+      det.addEventListener("click", () => abrirEdital(a.id));
+      [ap, rj, det].forEach((b) => acts.appendChild(b));
       card.appendChild(acts);
       grid.appendChild(card);
     });
@@ -652,6 +660,54 @@ async function loadEditais() {
   }
 }
 
+function renderEditaisTable(body, filtro) {
+  body.innerHTML = "";
+  const table = el("table", "table");
+  const thead = el("thead");
+  const trh = el("tr");
+  ["Nº EDITAL", "TÍTULO / ÓRGÃO", "STATUS", "VALOR EST.", "PRAZO", "PROPOSTAS", "AÇÕES"].forEach((h) => trh.appendChild(el("th", "", h)));
+  thead.appendChild(trh);
+  table.appendChild(thead);
+  const tbody = el("tbody");
+
+  const lista = editaisCache.filter((e) => {
+    if (!filtro) return true;
+    return (e.nome || "").toLowerCase().includes(filtro) || (e.numero || "").toLowerCase().includes(filtro) || (e.orgao || "").toLowerCase().includes(filtro);
+  });
+
+  if (!lista.length) {
+    const tr = el("tr");
+    const td = el("td", "", "Nenhum edital encontrado.");
+    td.colSpan = 7;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+
+  lista.forEach((e) => {
+    const sp = statusPill(e.status);
+    const tr = el("tr");
+    tr.appendChild(el("td", "num", e.numero));
+    const title = el("td", "title-cell");
+    title.appendChild(el("b", "", e.nome));
+    title.appendChild(el("span", "", e.orgao || e.criadoPor?.nome || "PRODESP"));
+    tr.appendChild(title);
+    const st = el("td");
+    st.appendChild(el("span", "pill " + sp.cls, sp.label));
+    tr.appendChild(st);
+    tr.appendChild(el("td", "val", fmtMoeda(e.valorEstimado)));
+    tr.appendChild(elHtml("td", "date", icon("calendar") + fmtData(e.prazoVigencia)));
+    tr.appendChild(el("td", "", String(e.propostas ?? 0)));
+    const ac = el("td", "actions");
+    const abrir = elHtml("button", "btn btn-ghost btn-sm", icon("eye") + " Abrir");
+    abrir.addEventListener("click", () => abrirEdital(e.id));
+    ac.appendChild(abrir);
+    tr.appendChild(ac);
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  body.appendChild(table);
+}
 // ---------- Cadastro de Edital ----------
 function buildCadastro() {
   const v = $("#view-cadastro");
@@ -687,15 +743,30 @@ function buildCadastro() {
   const numero = el("input"); numero.type = "text"; numero.id = "ed-numero"; numero.required = true;
   form.appendChild(mk("Número do Edital", true, numero));
 
+  const row0 = el("div", "form-row");
+  const orgao = el("input"); orgao.type = "text"; orgao.id = "ed-orgao"; orgao.placeholder = "Ex: SEFAZ, PRODESP";
+  row0.appendChild(mk("Órgão", false, orgao));
+  const modalidade = el("select"); modalidade.id = "ed-modalidade";
+  ["", "Pregão Eletrônico", "Concorrência", "Tomada de Preços", "Convite", "Leilão", "Concurso", "Diálogo Competitivo"].forEach((m) => { const o = el("option", "", m || "Selecione a modalidade"); o.value = m; modalidade.appendChild(o); });
+  row0.appendChild(mk("Modalidade", false, modalidade));
+  form.appendChild(row0);
+
   const descricao = el("textarea"); descricao.id = "ed-descricao"; descricao.rows = 4;
   form.appendChild(mk("Descrição Detalhada", false, descricao));
 
   const row = el("div", "form-row");
-  const data = el("input"); data.type = "date"; data.id = "ed-data";
-  row.appendChild(mk("Data de Publicação", false, data));
-  const prazo = el("input"); prazo.type = "date"; prazo.id = "ed-prazo";
-  row.appendChild(mk("Prazo de Vigência", false, prazo));
+  const valor = el("input"); valor.type = "number"; valor.id = "ed-valor"; valor.step = "0.01"; valor.min = "0"; valor.placeholder = "0,00";
+  row.appendChild(mk("Valor Estimado (R$)", false, valor));
+  const propostas = el("input"); propostas.type = "number"; propostas.id = "ed-propostas"; propostas.min = "0"; propostas.value = "0";
+  row.appendChild(mk("Propostas Recebidas", false, propostas));
   form.appendChild(row);
+
+  const row2 = el("div", "form-row");
+  const data = el("input"); data.type = "date"; data.id = "ed-data";
+  row2.appendChild(mk("Data de Publicação", false, data));
+  const prazo = el("input"); prazo.type = "date"; prazo.id = "ed-prazo";
+  row2.appendChild(mk("Prazo de Vigência", false, prazo));
+  form.appendChild(row2);
 
   const pdf = el("input"); pdf.type = "file"; pdf.id = "ed-pdf"; pdf.accept = "application/pdf";
   form.appendChild(mk("Upload de PDF", false, pdf));
@@ -719,6 +790,10 @@ function buildCadastro() {
     const fd = new FormData();
     fd.append("numero", numero.value.trim());
     fd.append("nome", nome.value.trim());
+    if (orgao.value.trim()) fd.append("orgao", orgao.value.trim());
+    if (modalidade.value) fd.append("modalidade", modalidade.value);
+    if (valor.value) fd.append("valorEstimado", valor.value);
+    if (propostas.value) fd.append("propostas", propostas.value);
     fd.append("descricao", descricao.value.trim());
     if (data.value) fd.append("dataPublicacao", data.value);
     if (prazo.value) fd.append("prazoVigencia", prazo.value);
@@ -740,6 +815,10 @@ function buildCadastro() {
 
 function resetFormEdital() { buildCadastro(); }
 
+
+
+  const p = (nome || "?").trim().split(/\s+/);
+  return ((p[0]?.[0] || "") + (p[1]?.[0] || "")).toUpperCase() || "?";
 // ---------- Página do Edital (detalhe) ----------
 function kv(k, val) {
   const d = el("div", "kv");
@@ -767,6 +846,10 @@ async function abrirEdital(id) {
     const c = el("div", "card");
     c.appendChild(kv("Número", e.numero));
     c.appendChild(kv("Código", e.codigo));
+    c.appendChild(kv("Órgão", e.orgao));
+    c.appendChild(kv("Modalidade", e.modalidade));
+    c.appendChild(kv("Valor Estimado", fmtMoeda(e.valorEstimado)));
+    c.appendChild(kv("Propostas", String(e.propostas ?? 0)));
     c.appendChild(kv("Status", STATUS_LABEL[e.status] || e.status));
     c.appendChild(kv("Data de Publicação", fmtData(e.dataPublicacao)));
     c.appendChild(kv("Prazo de Vigência", fmtData(e.prazoVigencia)));
@@ -799,6 +882,7 @@ async function abrirEdital(id) {
   }
 }
 
+}
 function acoesEdital(e) {
   const box = el("div", "card");
   box.appendChild(el("h3", "", "Ações"));
@@ -857,6 +941,7 @@ function parecerForm(id, tipo) {
 async function transicionar(id, status) {
   try {
     await api(`/editais/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) });
+    toast("Status atualizado.");
     abrirEdital(id);
   } catch (ex) { toast(ex.message); }
 }
@@ -889,6 +974,9 @@ async function renderFila(viewId, statuses, titulo) {
 function loadJuridico() { renderFila("juridico", ["AGUARDANDO_REVISAO_JURIDICA", "EM_REVISAO_JURIDICA"], "Revisão Jurídica"); }
 function loadTecnico() { renderFila("tecnico", ["AGUARDANDO_REVISAO_TECNICA", "EM_REVISAO_TECNICA"], "Especialidade Técnica"); }
 function loadGestor() { renderFila("gestor", ["AGUARDANDO_APROVACAO_GESTOR", "EM_APROVACAO_GESTOR"], "Aprovação Final"); }
+
+
+
 
 // ---------- Administração (usuários) ----------
 async function loadAdmin() {
@@ -996,7 +1084,6 @@ function diasRestantes(d) {
   if (!d) return null;
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
 }
-
 // ---------- Solicitação de Licitação (Visualizador) ----------
 function loadLicitacao() {
   const v = $("#view-licitacao");
@@ -1005,7 +1092,7 @@ function loadLicitacao() {
   const head = el("div", "page-head");
   const hLeft = el("div");
   hLeft.appendChild(el("h2", "", "Solicitação de Licitação"));
-  hLeft.appendChild(el("div", "sub", "Preencha o formulário abaixo para solicitar a abertura de um processo licitatório."));
+  hLeft.appendChild(el("div", "sub", "Preencha o formulário para solicitar a abertura de um processo licitatório."));
   head.appendChild(hLeft);
   v.appendChild(head);
 
@@ -1036,9 +1123,9 @@ function loadLicitacao() {
   c1.appendChild(mk("OBJETO DA LICITAÇÃO", true, objeto));
   const row1 = el("div", "form-row");
   const modalidade = el("select");
-  ["Selecione a modalidade", "Pregão Eletrônico", "Concorrência", "Tomada de Preços", "Convite", "Leilão", "Concurso", "Diálogo Competitivo"].forEach((m, i) => { const o = el("option", "", m); if (i === 0) o.value = ""; modalidade.appendChild(o); });
-  row1.appendChild(mk("MODALIDADE", true, modalidade));
-  const valor = el("input"); valor.placeholder = "R$ 0,00";
+  ["", "Pregão Eletrônico", "Concorrência", "Tomada de Preços", "Convite", "Leilão", "Concurso", "Diálogo Competitivo"].forEach((m) => { const o = el("option", "", m || "Selecione a modalidade"); o.value = m; modalidade.appendChild(o); });
+  row1.appendChild(mk("MODALIDADE", false, modalidade));
+  const valor = el("input"); valor.type = "number"; valor.step = "0.01"; valor.min = "0"; valor.placeholder = "R$ 0,00";
   row1.appendChild(mk("VALOR ESTIMADO", false, valor));
   c1.appendChild(row1);
   v.appendChild(c1);
@@ -1048,7 +1135,7 @@ function loadLicitacao() {
   fc2.appendChild(elHtml("span", "", icon("clipboard")));
   fc2.appendChild(el("h3", "", "Detalhes e Justificativa"));
   c2.appendChild(fc2);
-  const justificativa = el("textarea"); justificativa.rows = 4; justificativa.placeholder = "Descreva a necessidade da contratação e sua relevância para o órgão...";
+  const justificativa = el("textarea"); justificativa.rows = 4; justificativa.placeholder = "Descreva a necessidade da contratação e sua relevância...";
   c2.appendChild(mk("JUSTIFICATIVA DA NECESSIDADE", true, justificativa));
   const row2 = el("div", "form-row");
   const prazo = el("input"); prazo.type = "date";
@@ -1056,13 +1143,40 @@ function loadLicitacao() {
   const email = el("input"); email.type = "email"; email.placeholder = "setor@orgao.sp.gov.br";
   row2.appendChild(mk("E-MAIL DE CONTATO", true, email));
   c2.appendChild(row2);
-  const obs = el("textarea"); obs.rows = 3; obs.placeholder = "Informações complementares relevantes para o processo...";
+  const obs = el("textarea"); obs.rows = 3; obs.placeholder = "Informações complementares relevantes...";
   c2.appendChild(mk("OBSERVAÇÕES ADICIONAIS", false, obs));
+  const err = el("p", "error"); err.hidden = true;
+  c2.appendChild(err);
   const actions = el("div", "form-actions");
   const enviar = elHtml("button", "btn btn-primary", icon("arrow") + " Enviar Solicitação");
-  enviar.addEventListener("click", () => toast("Solicitação enviada (demonstração)."));
   const cancelar = el("button", "btn btn-ghost", "Cancelar");
   cancelar.addEventListener("click", () => route("dashboard"));
+  enviar.addEventListener("click", async () => {
+    err.hidden = true;
+    if (!orgao.value.trim() || !objeto.value.trim() || !justificativa.value.trim()) {
+      err.textContent = "Preencha os campos obrigatórios: órgão, objeto e justificativa.";
+      err.hidden = false;
+      return;
+    }
+    try {
+      const body = {
+        orgao: orgao.value.trim(),
+        objeto: objeto.value.trim(),
+        modalidade: modalidade.value || null,
+        valorEstimado: valor.value ? Number(valor.value) : null,
+        justificativa: justificativa.value.trim(),
+        prazoDesejado: prazo.value || null,
+        emailContato: email.value.trim() || null,
+        observacoes: obs.value.trim() || null,
+      };
+      const criado = await api("/solicitacoes", { method: "POST", body: JSON.stringify(body) });
+      toast("Solicitação enviada com sucesso (" + criado.numero + ").");
+      route("editais");
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.hidden = false;
+    }
+  });
   actions.appendChild(enviar);
   actions.appendChild(cancelar);
   c2.appendChild(actions);
@@ -1074,6 +1188,7 @@ function init() {
   renderDemoProfiles();
   bindLogin();
   $("#btn-logout").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+  $("#bell").addEventListener("click", toggleNotif);
   if (state.token) {
     api("/auth/me").then((d) => {
       state.usuario = d.usuario;
@@ -1086,15 +1201,4 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-
-
-
-
-
-
-
-
-
-
-
 
