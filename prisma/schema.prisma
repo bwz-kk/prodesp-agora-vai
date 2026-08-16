@@ -1,0 +1,133 @@
+// Prisma Schema — Automatização de Editais (PRODESP)
+// Camada de Dados (Agente de Dados)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUNS DE NEGÓCIO
+// ============================================================
+
+enum Perfil {
+  ADMINISTRADOR
+  JURIDICO
+  TECNICO
+  GESTOR
+  COMUNICACAO
+}
+
+// Máquina de estados do fluxo de aprovação do edital.
+// (Nomes ASCII; equivalentes aos com acento na documentação:
+//  EX: AGUARDANDO_REVISAO_JURIDICA == "AGUARDANDO_REVISÃO_JURIDICA")
+enum StatusEdital {
+  RASCUNHO
+  AGUARDANDO_REVISAO_JURIDICA
+  EM_REVISAO_JURIDICA
+  AGUARDANDO_REVISAO_TECNICA
+  EM_REVISAO_TECNICA
+  AGUARDANDO_APROVACAO_GESTOR
+  EM_APROVACAO_GESTOR
+  PUBLICADO
+  REPROVADO
+  EM_CORRECAO
+}
+
+enum TipoParecer {
+  JURIDICO
+  TECNICO
+}
+
+enum ResultadoParecer {
+  APROVADO
+  REPROVADO
+}
+
+enum TipoAcao {
+  LOGIN
+  CRIAR_EDITAL
+  ATUALIZAR_EDITAL
+  EXCLUIR_EDITAL
+  ENVIAR_PARA_REVISAO
+  INICIAR_REVISAO_JURIDICA
+  INICIAR_REVISAO_TECNICA
+  INICIAR_APROVACAO_GESTOR
+  PARECER_JURIDICO
+  PARECER_TECNICO
+  APROVAR_JURIDICO
+  APROVAR_TECNICO
+  APROVAR_GESTOR
+  REPROVAR_GESTOR
+  SOLICITAR_CORRECAO
+}
+
+// ============================================================
+// MODELOS
+// ============================================================
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  perfil    Perfil
+  criadoEm  DateTime @default(now())
+
+  editais     Edital[]    @relation("EditalAutor")
+  pareceres   Parecer[]   @relation("ParecerAutor")
+  auditorias  Auditoria[] @relation("AuditoriaUsuario")
+}
+
+model Edital {
+  id             Int          @id @default(autoincrement())
+  codigo         String       @default(cuid()) @unique
+  numero         String       @unique
+  nome           String
+  descricao      String?
+  dataPublicacao DateTime?
+  prazoVigencia  DateTime?
+  pdfPath        String?
+  status         StatusEdital @default(RASCUNHO)
+
+  criadoPorId Int
+  criadoPor   Usuario     @relation("EditalAutor", fields: [criadoPorId], references: [id])
+
+  pareceres   Parecer[]
+  auditorias  Auditoria[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model Parecer {
+  id         Int              @id @default(autoincrement())
+  editalId   Int
+  edital     Edital           @relation(fields: [editalId], references: [id])
+  tipo       TipoParecer
+  resultado  ResultadoParecer
+  conteudo   String
+  criadoEm   DateTime         @default(now())
+
+  emitidoPorId Int
+  emitidoPor   Usuario        @relation("ParecerAutor", fields: [emitidoPorId], references: [id])
+}
+
+// Tabela de auditoria — rastreabilidade de todas as ações (Agente de Auditoria Logger)
+model Auditoria {
+  id           Int           @id @default(autoincrement())
+  tipoAcao     TipoAcao
+  editalId     Int?
+  edital       Edital?       @relation(fields: [editalId], references: [id])
+  estadoAnterior  StatusEdital?
+  estadoPosterior StatusEdital?
+  dataHora     DateTime      @default(now())
+  observacoes  String?
+
+  usuarioId Int
+  usuario   Usuario @relation("AuditoriaUsuario", fields: [usuarioId], references: [id])
+}
