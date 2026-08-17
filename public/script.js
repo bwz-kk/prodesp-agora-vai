@@ -1189,11 +1189,9 @@ function loadLicitacao() {
 
 // ---------- Init ----------
 function init() {
-  alert("JS v3 loaded — init running");
+  try {
   renderDemoProfiles();
-  alert("demo profiles rendered");
   bindLogin();
-  alert("login form bound");
   $("#btn-logout").addEventListener("click", (e) => { e.preventDefault(); logout(); });
   $("#bell").addEventListener("click", toggleNotif);
   if (state.token) {
@@ -1205,6 +1203,7 @@ function init() {
   } else {
     $("#view-login").hidden = false;
   }
+  } catch(e) { document.title = "ERRO: " + e.message; }
 }
 
 document.addEventListener("DOMContentLoaded", init);
