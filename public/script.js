@@ -822,8 +822,6 @@ function resetFormEdital() { buildCadastro(); }
 
 
 
-  const p = (nome || "?").trim().split(/\s+/);
-  return ((p[0]?.[0] || "") + (p[1]?.[0] || "")).toUpperCase() || "?";
 // ---------- Página do Edital (detalhe) ----------
 function kv(k, val) {
   const d = el("div", "kv");
