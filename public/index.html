@@ -41,6 +41,7 @@
 
       <div class="login-panel">
         <div class="login-card">
+          <div id="diag-inline" style="font-size:10px;color:#888;text-align:center;margin-bottom:8px">⏳ Carregando...</div>
           <div class="login-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></div>
           <div class="login-title">LOGIN</div>
 
@@ -132,7 +133,16 @@
     </div>
   </div>
 
-  <script src="script.js?v=4"></script>
+  <script>
+  // DIAG — inline test
+  console.log("HTML loaded v5");
+  document.addEventListener("DOMContentLoaded", function() {
+    var d = document.getElementById("diag-inline");
+    if (d) d.textContent = "JS OK v5 | " + new Date().toISOString();
+    document.title = "PRODESP — v5 loaded";
+  });
+  </script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>
 
