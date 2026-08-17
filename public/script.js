@@ -1189,8 +1189,11 @@ function loadLicitacao() {
 
 // ---------- Init ----------
 function init() {
+  alert("JS v3 loaded — init running");
   renderDemoProfiles();
+  alert("demo profiles rendered");
   bindLogin();
+  alert("login form bound");
   $("#btn-logout").addEventListener("click", (e) => { e.preventDefault(); logout(); });
   $("#bell").addEventListener("click", toggleNotif);
   if (state.token) {
