@@ -164,10 +164,19 @@ function renderSwitcher() {
   box.innerHTML = "";
   DEMO_PROFILES.forEach((p) => {
     const b = el("button", "sw-pill" + (p.key === state.demoProfile ? " active" : ""), p.label);
-    b.addEventListener("click", () => {
-      state.demoProfile = p.key;
-      renderShell();
-      route("dashboard");
+    b.addEventListener("click", async () => {
+      if (p.key === state.demoProfile) return;
+      try {
+        const data = await api("/auth/login", { method: "POST", body: JSON.stringify({ email: p.email, senha: "123456" }) });
+        state.token = data.token;
+        state.usuario = data.usuario;
+        state.demoProfile = data.usuario.perfil;
+        localStorage.setItem("token", data.token);
+        toast("Perfil alterado: " + p.label + ".");
+        entrarApp();
+      } catch (ex) {
+        toast(ex.message);
+      }
     });
     box.appendChild(b);
   });
