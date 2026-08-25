@@ -3,12 +3,10 @@
 import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 
-const dbUrl = process.env.DATABASE_URL || (() => { try { return env("DATABASE_URL"); } catch { return "postgresql://localhost:5432/dummy"; } })();
-
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: dbUrl,
+    url: env("DATABASE_URL"),
   },
   migrations: {
     path: "prisma/migrations",
