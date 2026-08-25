@@ -1,0 +1,27 @@
+{
+  "auth": null,
+  "project": {
+    "rememberedByWorkspace": {},
+    "lastResolved": null,
+    "repositoryConnectionsByProject": {}
+  },
+  "branch": {
+    "active": "preview"
+  },
+  "app": {
+    "selectedByProject": {
+      "proj_cmsv2uahl1enj02dzm4ax8wlm": {
+        "id": "cps_xcodlgzjj79u5cie7z0c474y",
+        "name": "Prodesp"
+      }
+    },
+    "knownLiveDeploymentByProject": {
+      "proj_cmsv2uahl1enj02dzm4ax8wlm": {
+        "cps_xcodlgzjj79u5cie7z0c474y": "cpv_lufcvqdvzlx1mim230beym46"
+      }
+    }
+  },
+  "agent": {
+    "setupPromptDismissedAt": null
+  }
+}
