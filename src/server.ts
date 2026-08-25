@@ -1,5 +1,6 @@
 // Ponto de entrada do servidor (inicializa a API)
-import "dotenv/config";
+// Nota: .env local é carregado via "-r dotenv/config" no script dev;
+// em produção (Prisma Compute) as variáveis são injetadas pela plataforma.
 import app from "./app";
 
 const PORT = Number(process.env.PORT) || 3000;

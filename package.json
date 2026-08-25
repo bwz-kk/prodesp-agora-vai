@@ -4,7 +4,7 @@
   "description": "Automatização de Editais — PRODESP (Back-End: API REST + Prisma + PostgreSQL)",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only -r dotenv/config src/server.ts",
     "build": "prisma generate && tsc && node -e \"const fs=require('fs');fs.rmSync('dist/public',{recursive:true,force:true});fs.cpSync('public','dist/public',{recursive:true})\"",
     "start": "npm run build && node dist/server.js",
     "prisma:generate": "prisma generate",
